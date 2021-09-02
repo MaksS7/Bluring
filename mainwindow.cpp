@@ -59,6 +59,7 @@ bool MainWindow::openFile()
     //TODO: добавить выбор класса для блюра в GUI
     QTextStream streamFromFile(&file);
     QStringList tempList = streamFromFile.readAll().split("\n");
+    tempList.removeAll("");
     indexBlureClass = tempList.indexOf("blure");
     file.close();
 
@@ -109,13 +110,27 @@ bool MainWindow::bluringImage()
                 return false;
 
             QTextStream stream(&fileTxt);
-            QStringList listCoordinates = stream.readAll().split("\n").filter(re);
+            QStringList listAllFromFile = stream.readAll().split("\n");
+//            if (listAllFromFile.last().isEmpty())
+                listAllFromFile.removeAll("");
 
-            if (deleteClassBlur) {
-                //add delete class from file
-            }
+            QStringList listCoordinates = listAllFromFile.filter(re);
 
             fileTxt.close();
+
+            if (deleteClassBlur) {
+                if (!fileTxt.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+                    return false;
+                //add delete class from file
+                for (const QString &str : qAsConst(listAllFromFile)) {
+                    QStringList tempStrList = str.split(" ");
+                    if (tempStrList[0].toInt() != indexBlureClass && (tempStrList.size() > 1)){
+                        stream << str + "\n";
+                    }
+                }
+                fileTxt.close();
+            }
+
 
             for (const QString &box : qAsConst(listCoordinates)) { //TODO: перенос в отдельную функцию
                  QStringList coordinates = box.split(" ");
@@ -131,6 +146,7 @@ bool MainWindow::bluringImage()
             cv::imwrite(imagePath.filePath().toStdString(), tempImage);
             tempImage.release();
         }
+
         progressDialog.close();
         QMessageBox msgBox;
         msgBox.setText("WELL DONE.");

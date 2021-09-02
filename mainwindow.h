@@ -16,11 +16,11 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
     bool openDir();
     bool openFile();
-
     bool bluringImage();
-
+private:
     QDir pathDirWithImage;
     QStringList listOfClass;
     int indexBlureClass;
