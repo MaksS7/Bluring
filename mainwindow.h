@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QFileDialog>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,6 +18,14 @@ public:
 
     bool openDir();
     bool openFile();
+
+    bool bluringImage();
+
+    QDir pathDirWithImage;
+    QStringList listOfClass;
+    int indexBlureClass;
+    QFileInfoList listImage;
+    bool deleteClassBlur;
 
 private:
     Ui::MainWindow *ui;
