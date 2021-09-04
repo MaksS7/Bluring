@@ -57,12 +57,14 @@ bool MainWindow::openFile()
         return false;
 
     //TODO: добавить выбор класса для блюра в GUI
+    //TODO: добавить индикацию о классе блюр
     QTextStream streamFromFile(&file);
     QStringList tempList = streamFromFile.readAll().split("\n");
     tempList.removeAll("");
     indexBlureClass = tempList.indexOf("blure");
     file.close();
-
+    if (indexBlureClass < 0)
+        return false;
 
     if (deleteClassBlur) {
         tempList.removeAt(indexBlureClass);
@@ -75,8 +77,6 @@ bool MainWindow::openFile()
         file.close();
     }
 
-    if (indexBlureClass < 0)
-        return false;
     return true;
 }
 
