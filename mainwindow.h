@@ -16,16 +16,21 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void setNameBlurInFile(const QString &name);
+    QString getNameBlurInFile() const;
+
 private slots:
     bool openDir();
     bool openFile();
     bool bluringImage();
+
 private:
     QDir pathDirWithImage;
     QStringList listOfClass;
     int indexBlureClass;
     QFileInfoList listImage;
     bool deleteClassBlur;
+    QString nameClassBlurInFile;
 
 private:
     Ui::MainWindow *ui;

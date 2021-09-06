@@ -12,21 +12,36 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , indexBlureClass(-1)
     , deleteClassBlur(true)
+    , nameClassBlurInFile("blure")
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->leNameClassForBlure->setText(nameClassBlurInFile);
     connect(ui->btnOpenDir, &QPushButton::clicked,
             this, &MainWindow::openDir);
     connect(ui->btnOpenNamesFile, &QPushButton::clicked,
             this, &MainWindow::openFile);
     connect(ui->btnBlur, &QPushButton::clicked,
             this, &MainWindow::bluringImage);
-    connect(ui->rbDeleteClassBlur, &QRadioButton::toggled, [this](bool set) { deleteClassBlur = set; });
+    connect(ui->rbDeleteClassBlur, &QRadioButton::toggled,
+            [this](bool set) { deleteClassBlur = set; });
+    connect(ui->leNameClassForBlure, &QLineEdit::textEdited,
+            this, &MainWindow::setNameBlurInFile);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::setNameBlurInFile(const QString &name)
+{
+    nameClassBlurInFile = name;
+}
+
+QString MainWindow::getNameBlurInFile() const
+{
+    return nameClassBlurInFile;
 }
 
 bool MainWindow::openDir()
@@ -56,12 +71,11 @@ bool MainWindow::openFile()
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return false;
 
-    //TODO: добавить выбор класса для блюра в GUI
-    //TODO: добавить индикацию о классе блюр
     QTextStream streamFromFile(&file);
     QStringList tempList = streamFromFile.readAll().split("\n");
     tempList.removeAll("");
-    indexBlureClass = tempList.indexOf("blure");
+
+    indexBlureClass = tempList.indexOf(getNameBlurInFile());
     file.close();
     if (indexBlureClass < 0)
         return false;
@@ -82,7 +96,7 @@ bool MainWindow::openFile()
 
 bool MainWindow::bluringImage()
 {
-    if (indexBlureClass >= 0) {
+    if (indexBlureClass >= 0 && !listImage.isEmpty()) {
         QFile fileTxt;
         QRegularExpression re("^(" + QString::number(indexBlureClass) + ") ");
 
@@ -121,7 +135,6 @@ bool MainWindow::bluringImage()
             if (deleteClassBlur) {
                 if (!fileTxt.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
                     return false;
-                //add delete class from file
                 for (const QString &str : qAsConst(listAllFromFile)) {
                     QStringList tempStrList = str.split(" ");
                     if (tempStrList[0].toInt() != indexBlureClass && (tempStrList.size() > 1)){
@@ -153,6 +166,7 @@ bool MainWindow::bluringImage()
         msgBox.exec();
         return true;
     }
+    //TODO: вывод ошибки
     return false;
 }
 

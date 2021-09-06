@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>500</width>
+    <height>200</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -84,9 +84,9 @@
    <widget class="QPushButton" name="btnBlur">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>150</y>
-      <width>89</width>
+      <x>0</x>
+      <y>130</y>
+      <width>500</width>
       <height>25</height>
      </rect>
     </property>
@@ -110,13 +110,70 @@
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>50</y>
+      <width>296</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="labelNameClassForBlur">
+       <property name="text">
+        <string>Name class for blur</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="leNameClassForBlure">
+       <property name="toolTip">
+        <string>Enter the class for blurring</string>
+       </property>
+       <property name="inputMask">
+        <string/>
+       </property>
+       <property name="text">
+        <string notr="true"/>
+       </property>
+       <property name="maxLength">
+        <number>32767</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QCheckBox" name="cbClassBlurFound">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>90</y>
+      <width>151</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Indicates whether a class for blurring was found</string>
+    </property>
+    <property name="text">
+     <string>Class blur found</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>500</width>
      <height>22</height>
     </rect>
    </property>
