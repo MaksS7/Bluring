@@ -10,10 +10,10 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
     , indexBlureClass(-1)
     , deleteClassBlur(true)
     , nameClassBlurInFile("blure")
-    , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     ui->leNameClassForBlure->setText(nameClassBlurInFile);
@@ -25,8 +25,13 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::bluringImage);
     connect(ui->rbDeleteClassBlur, &QRadioButton::toggled,
             [this](bool set) { deleteClassBlur = set; });
-    connect(ui->leNameClassForBlure, &QLineEdit::textEdited,
-            this, &MainWindow::setNameBlurInFile);
+    connect(ui->leNameClassForBlure, &QLineEdit::textEdited, this, &MainWindow::setNameBlurInFile);
+
+    //TODO: доделать выбор
+
+//    connect(ui->comboBoxNameClassForBlure, &QComboBox::currentTextChanged, this, &MainWindow::setNameBlurInFile);
+
+    connect(this, &MainWindow::classBlurFound, ui->cbClassBlurFound, &QCheckBox::setChecked);
 }
 
 MainWindow::~MainWindow()
@@ -47,50 +52,63 @@ QString MainWindow::getNameBlurInFile() const
 bool MainWindow::openDir()
 {
     pathDirWithImage = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this, tr("Find Path"), QDir::homePath()));
-    if (!pathDirWithImage.exists())
+    if (!pathDirWithImage.exists()) {
+        QMessageBox::warning(this, tr("File no exist"), tr("The selected file does not exist"));
         return false;
+    }
 
     QStringList filters;
     filters << "*.jpg" << "*.png";
     listImage = pathDirWithImage.entryInfoList(filters, QDir::Files);
     ui->leCountImages->setText(QString::number(listImage.size()));
 
-    if (listImage.empty())
+    if (listImage.empty()) {
+        QMessageBox::warning(this, tr("Folder error"), tr("There are no files with images or the folder is empty"));
         return false;
+    }
 
     return true;
 }
 
 bool MainWindow::openFile()
 {
+    ui->cbClassBlurFound->setChecked(false);
     QFile file(QFileDialog::getOpenFileName(this, tr("Open \"Name class\" file"), QDir::homePath()));
 
-    if (!file.exists())
+    if (!file.exists() && file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, tr("File error"), tr("The file with the class names cannot be opened"));
         return false;
-
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return false;
+    }
 
     QTextStream streamFromFile(&file);
     QStringList tempList = streamFromFile.readAll().split("\n");
     tempList.removeAll("");
 
+
     indexBlureClass = tempList.indexOf(getNameBlurInFile());
+    ui->comboBoxNameClassForBlure->addItems(tempList);
+
     file.close();
-    if (indexBlureClass < 0)
+    if (indexBlureClass < 0) {
+        QMessageBox::information(this, tr("Class blur"), tr("The class for blurring was not found"));
         return false;
+    }
+
+    ui->comboBoxNameClassForBlure->setCurrentIndex(indexBlureClass);
+    emit classBlurFound(true);
 
     if (deleteClassBlur) {
         tempList.removeAt(indexBlureClass);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+            QMessageBox::warning(this, tr("File delete error"), tr("The file with the class names cannot be opened"));
             return false;
+        }
 
         for (const QString &str : qAsConst(tempList)) {
             streamFromFile << str + "\n";
         }
         file.close();
     }
-
     return true;
 }
 
@@ -120,8 +138,10 @@ bool MainWindow::bluringImage()
             cv::Mat tempImage = cv::imread(imagePath.filePath().toStdString());
             fileTxt.setFileName(imagePath.path() + "/" + imagePath.baseName() + ".txt");
 
-            if (!fileTxt.open(QIODevice::ReadOnly | QIODevice::Text))
+            if (!fileTxt.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QMessageBox::warning(this, tr("File error"), tr("The file with the coordinates cannot be opened"));
                 return false;
+            }
 
             QTextStream stream(&fileTxt);
             QStringList listAllFromFile = stream.readAll().split("\n");
@@ -133,8 +153,10 @@ bool MainWindow::bluringImage()
             fileTxt.close();
 
             if (deleteClassBlur) {
-                if (!fileTxt.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+                if (!fileTxt.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+                    QMessageBox::warning(this, tr("File delete error"), tr("The file with the coordinates cannot be opened"));
                     return false;
+                }
                 for (const QString &str : qAsConst(listAllFromFile)) {
                     QStringList tempStrList = str.split(" ");
                     if (tempStrList[0].toInt() != indexBlureClass && (tempStrList.size() > 1)){
@@ -145,7 +167,7 @@ bool MainWindow::bluringImage()
             }
 
 
-            for (const QString &box : qAsConst(listCoordinates)) { //TODO: перенос в отдельную функцию
+            for (const QString &box : qAsConst(listCoordinates)) { //TODO: перенос в отдельную функцию для потока
                  QStringList coordinates = box.split(" ");
                  coordinates.removeAt(0);
 
@@ -166,7 +188,7 @@ bool MainWindow::bluringImage()
         msgBox.exec();
         return true;
     }
-    //TODO: вывод ошибки
+    QMessageBox::warning(this, tr("Bluring error"), tr("The class for blurring was not found or the list of images is empty"));
     return false;
 }
 
