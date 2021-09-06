@@ -6,12 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>769</width>
-    <height>441</height>
+    <width>600</width>
+    <height>200</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>App blur</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="btnOpenDir">
@@ -23,6 +29,9 @@
       <height>25</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Open dir with image</string>
+    </property>
     <property name="text">
      <string>Open directory</string>
     </property>
@@ -30,11 +39,14 @@
    <widget class="QPushButton" name="btnOpenNamesFile">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>180</x>
       <y>10</y>
       <width>121</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>Open file with name class</string>
     </property>
     <property name="text">
      <string>Open Names file</string>
@@ -85,8 +97,8 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>210</y>
-      <width>500</width>
+      <y>130</y>
+      <width>600</width>
       <height>25</height>
      </rect>
     </property>
@@ -97,7 +109,7 @@
    <widget class="QRadioButton" name="rbDeleteClassBlur">
     <property name="geometry">
      <rect>
-      <x>290</x>
+      <x>310</x>
       <y>10</y>
       <width>131</width>
       <height>23</height>
@@ -113,9 +125,9 @@
    <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>180</x>
       <y>50</y>
-      <width>361</width>
+      <width>401</width>
       <height>31</height>
      </rect>
     </property>
@@ -161,8 +173,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>90</y>
+      <x>450</x>
+      <y>10</y>
       <width>151</width>
       <height>23</height>
      </rect>
@@ -183,7 +195,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>769</width>
+     <width>600</width>
      <height>22</height>
     </rect>
    </property>

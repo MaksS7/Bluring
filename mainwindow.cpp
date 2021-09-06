@@ -6,8 +6,10 @@
 #include <QRegularExpression>
 #include <QProgressDialog>
 #include <QMessageBox>
+#include <QDesktopServices>
 
-
+//TODO: переделать сигнал удаления данных из файлов
+// Вынести из функции удаление данных из файлов в одную отдельную функцию
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -25,13 +27,14 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::bluringImage);
     connect(ui->rbDeleteClassBlur, &QRadioButton::toggled,
             [this](bool set) { deleteClassBlur = set; });
-    connect(ui->leNameClassForBlure, &QLineEdit::textEdited, this, &MainWindow::setNameBlurInFile);
-
+    connect(ui->leNameClassForBlure, &QLineEdit::textEdited,
+            this, &MainWindow::setNameBlurInFile);
     //TODO: доделать выбор
 
 //    connect(ui->comboBoxNameClassForBlure, &QComboBox::currentTextChanged, this, &MainWindow::setNameBlurInFile);
 
-    connect(this, &MainWindow::classBlurFound, ui->cbClassBlurFound, &QCheckBox::setChecked);
+    connect(this, &MainWindow::classBlurFound,
+            ui->cbClassBlurFound, &QCheckBox::setChecked);
 }
 
 MainWindow::~MainWindow()
@@ -70,12 +73,17 @@ bool MainWindow::openDir()
     return true;
 }
 
-bool MainWindow::openFile()
+bool MainWindow::openFile() //TODO: переделать с возможностью выбора из combobox
 {
     ui->cbClassBlurFound->setChecked(false);
     QFile file(QFileDialog::getOpenFileName(this, tr("Open \"Name class\" file"), QDir::homePath()));
 
-    if (!file.exists() && file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    if (!file.exists()) {
+        QMessageBox::warning(this, tr("File error"), tr("The file with the class names cannot be opened"));
+        return false;
+    }
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QMessageBox::warning(this, tr("File error"), tr("The file with the class names cannot be opened"));
         return false;
     }
