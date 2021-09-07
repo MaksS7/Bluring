@@ -18,6 +18,10 @@ public:
 
     QString getNameBlurInFile() const;
     void setNameBlurInFile(const QString &name);
+    void setBlureIndex(const int &num);
+    int getBlurIndex() const {
+        return indexBlureClass;
+    }
 
 signals:
     void classBlurFound(bool state);

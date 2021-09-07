@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , indexBlureClass(-1)
-    , deleteClassBlur(true)
+    , deleteClassBlur(false)
     , nameClassBlurInFile("blure")
     , alreadyDeletedClassName(false)
     , alreadyDeletedCoordinates(false)
@@ -34,7 +34,18 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->btnDeleteAllBlure, &QPushButton::clicked, this, &MainWindow::deleteClassBlurAndCoordinates);
     //TODO: доделать выбор
 
-//    connect(ui->comboBoxNameClassForBlure, &QComboBox::currentTextChanged, this, &MainWindow::setNameBlurInFile);
+//    connect(ui->comboBoxNameClassForBlure, &QComboBox::highlighted, )
+
+    auto frameIdTextChanged = [this](const QString &text) {
+        if (!text.isEmpty() && text != getNameBlurInFile()) {
+            setNameBlurInFile(text);
+            setBlureIndex(listOfClass.lastIndexOf(text));
+            ui->leNameClassForBlure->setText(text);
+        }
+    };
+
+    connect(ui->comboBoxNameClassForBlure, QOverload<const QString &>::of(&QComboBox::activated),
+        [=](const QString &text){ frameIdTextChanged(text);});
 
     connect(this, &MainWindow::classBlurFound,
             ui->cbClassBlurFound, &QCheckBox::setChecked);
@@ -48,6 +59,11 @@ MainWindow::~MainWindow()
 void MainWindow::setNameBlurInFile(const QString &name)
 {
     nameClassBlurInFile = name;
+}
+
+void MainWindow::setBlureIndex(const int &num)
+{
+    indexBlureClass = num;
 }
 
 QString MainWindow::getNameBlurInFile() const
@@ -99,26 +115,31 @@ bool MainWindow::openFile() //TODO: переделать с возможност
     listOfClass = streamFromFile.readAll().split("\n");
     listOfClass.removeAll("");
 
-
-    indexBlureClass = listOfClass.indexOf(getNameBlurInFile());
+    int tempIndex = -1;
+    tempIndex = listOfClass.indexOf(getNameBlurInFile());
     ui->comboBoxNameClassForBlure->clear();
     ui->comboBoxNameClassForBlure->addItems(listOfClass);
+
+    if (tempIndex < 0) {
+        QMessageBox::information(this, tr("Class blur"), tr("The class for blurring was not found"));
+        return false;
+    } else {
+        setBlureIndex(tempIndex);
+        ui->comboBoxNameClassForBlure->setCurrentIndex(tempIndex);
+    }
 
     file.close();
     emit updateFileInfo(); //TODO: check
     emit classBlurFound(true);
-    if (indexBlureClass < 0) {
-        QMessageBox::information(this, tr("Class blur"), tr("The class for blurring was not found"));
-        return false;
-    }
 
     if (deleteClassBlur && !alreadyDeletedClassName) {
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
             QMessageBox::warning(this, tr("File delete error"), tr("The file with the class names cannot be opened"));
             return false;
         }
-        listOfClass.removeAt(indexBlureClass);
-        ui->comboBoxNameClassForBlure->removeItem(indexBlureClass);
+        listOfClass.removeAt(tempIndex);
+        ui->comboBoxNameClassForBlure->setCurrentIndex(0);
+        ui->comboBoxNameClassForBlure->removeItem(tempIndex);
         QTextStream streamToFile(&file);
 
         for (const QString &str : qAsConst(listOfClass)) {
@@ -129,16 +150,16 @@ bool MainWindow::openFile() //TODO: переделать с возможност
     }
 
 
-    ui->comboBoxNameClassForBlure->setCurrentIndex(indexBlureClass);
 
     return true;
 }
 
 bool MainWindow::bluringImage()
 {
-    if (indexBlureClass >= 0 && !listImage.isEmpty()) {
+    int tempIndex = getBlurIndex();
+    if (tempIndex >= 0 && !listImage.isEmpty()) {
         QFile fileTxt;
-        QRegularExpression re("^(" + QString::number(indexBlureClass) + ") ");
+        QRegularExpression re("^(" + QString::number(tempIndex) + ") ");
 
         QProgressDialog progressDialog(this);
         progressDialog.setCancelButtonText(tr("&Cancel"));
@@ -180,7 +201,7 @@ bool MainWindow::bluringImage()
                 }
                 for (const QString &str : qAsConst(listAllCoordinates)) {
                     QStringList tempStrList = str.split(" ");
-                    if (tempStrList[0].toInt() != indexBlureClass && (tempStrList.size() > 1)){
+                    if (tempStrList[0].toInt() != tempIndex && (tempStrList.size() > 1)){
                         stream << str + "\n";
                     }
                 }
@@ -217,14 +238,16 @@ bool MainWindow::bluringImage()
 int MainWindow::deleteClassBlurAndCoordinates()
 {
     int st = 0;
+    int tempIndex = getBlurIndex();
     if (!listOfClass.empty() && !alreadyDeletedClassName) {
         QFile file(pathToFileNameClass);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
             QMessageBox::warning(this, tr("File delete error"), tr("The file with the class names cannot be opened"));
             return -1;
         }
-        listOfClass.removeAt(indexBlureClass);
-        ui->comboBoxNameClassForBlure->removeItem(indexBlureClass);
+        listOfClass.removeAt(tempIndex);
+        ui->comboBoxNameClassForBlure->setCurrentIndex(0);
+        ui->comboBoxNameClassForBlure->removeItem(tempIndex);
         QTextStream streamToFile(&file);
 
         for (const QString &str : qAsConst(listOfClass)) {
@@ -247,7 +270,7 @@ int MainWindow::deleteClassBlurAndCoordinates()
             QTextStream stream(&fileTxt);
             for (const QString &str : qAsConst(listAllCoordinates)) {
                 QStringList tempStrList = str.split(" ");
-                if (tempStrList[0].toInt() != indexBlureClass && (tempStrList.size() > 1)){
+                if (tempStrList[0].toInt() != tempIndex && (tempStrList.size() > 1)){
                     stream << str + "\n";
                 }
             }
