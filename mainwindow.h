@@ -35,6 +35,7 @@ private slots:
     int deleteClassBlurAndCoordinates();
 
 private:
+    bool deleteClassNameFromFile();
     Ui::MainWindow *ui;
 
     QDir pathDirWithImage;

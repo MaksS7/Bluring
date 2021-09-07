@@ -33,9 +33,6 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::setNameBlurInFile);
     connect(ui->btnDeleteAllBlure, &QPushButton::clicked, this, &MainWindow::deleteClassBlurAndCoordinates);
     //TODO: доделать выбор
-
-//    connect(ui->comboBoxNameClassForBlure, &QComboBox::highlighted, )
-
     auto frameIdTextChanged = [this](const QString &text) {
         if (!text.isEmpty() && text != getNameBlurInFile()) {
             setNameBlurInFile(text);
@@ -74,6 +71,7 @@ QString MainWindow::getNameBlurInFile() const
 bool MainWindow::openDir()
 {
     alreadyDeletedCoordinates = false;
+    ui->cbImagesFound->setChecked(false);
     ui->leCountImages->clear();
     pathDirWithImage = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this, tr("Find Path"), QDir::homePath()));
     if (!pathDirWithImage.exists()) {
@@ -91,6 +89,7 @@ bool MainWindow::openDir()
         return false;
     }
     emit updateDirInfo();
+    ui->cbImagesFound->setChecked(true);
     return true;
 }
 
@@ -131,26 +130,6 @@ bool MainWindow::openFile() //TODO: переделать с возможност
     file.close();
     emit updateFileInfo(); //TODO: check
     emit classBlurFound(true);
-
-    if (deleteClassBlur && !alreadyDeletedClassName) {
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-            QMessageBox::warning(this, tr("File delete error"), tr("The file with the class names cannot be opened"));
-            return false;
-        }
-        listOfClass.removeAt(tempIndex);
-        ui->comboBoxNameClassForBlure->setCurrentIndex(0);
-        ui->comboBoxNameClassForBlure->removeItem(tempIndex);
-        QTextStream streamToFile(&file);
-
-        for (const QString &str : qAsConst(listOfClass)) {
-            streamToFile << str + "\n";
-        }
-        file.close();
-        alreadyDeletedClassName = true;
-    }
-
-
-
     return true;
 }
 
@@ -194,19 +173,8 @@ bool MainWindow::bluringImage()
 
             fileTxt.close();
 
-            if (deleteClassBlur && !alreadyDeletedCoordinates) {
-                if (!fileTxt.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-                    QMessageBox::warning(this, tr("File delete error"), tr("The file with the coordinates cannot be opened"));
-                    return false;
-                }
-                for (const QString &str : qAsConst(listAllCoordinates)) {
-                    QStringList tempStrList = str.split(" ");
-                    if (tempStrList[0].toInt() != tempIndex && (tempStrList.size() > 1)){
-                        stream << str + "\n";
-                    }
-                }
-                fileTxt.close();
-                alreadyDeletedCoordinates = true;
+            if (deleteClassBlur) {
+                int stDeleted = deleteClassBlurAndCoordinates();
             }
 
 
@@ -275,11 +243,10 @@ int MainWindow::deleteClassBlurAndCoordinates()
                 }
             }
             fileTxt.close();
-            alreadyDeletedCoordinates = true;
         }
+        alreadyDeletedCoordinates = true;
         st++;
     }
-
     return st;
 }
 

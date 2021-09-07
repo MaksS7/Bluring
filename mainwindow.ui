@@ -212,6 +212,28 @@
      </item>
     </layout>
    </widget>
+   <widget class="QCheckBox" name="cbImagesFound">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>110</y>
+      <width>135</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Indicates whether a class for blurring was found</string>
+    </property>
+    <property name="text">
+     <string>Images found</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
