@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>200</height>
+    <width>775</width>
+    <height>343</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,44 +20,105 @@
    <string>App blur</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="btnOpenDir">
+   <widget class="QPushButton" name="btnBlur">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>180</y>
+      <width>600</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>BLURIIING</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_3">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>111</width>
-      <height>25</height>
+      <width>751</width>
+      <height>51</height>
      </rect>
     </property>
-    <property name="toolTip">
-     <string>Open dir with image</string>
-    </property>
-    <property name="text">
-     <string>Open directory</string>
-    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="btnOpenDir">
+       <property name="toolTip">
+        <string>Open dir with image</string>
+       </property>
+       <property name="text">
+        <string>Open directory</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnOpenNamesFile">
+       <property name="toolTip">
+        <string>Open file with name class</string>
+       </property>
+       <property name="text">
+        <string>Open Names file</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnDeleteAllBlure">
+       <property name="text">
+        <string>Delete all blur without bluring</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
-   <widget class="QPushButton" name="btnOpenNamesFile">
+   <widget class="QCheckBox" name="cbClassBlurFound">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>10</y>
-      <width>121</width>
-      <height>25</height>
+      <x>10</x>
+      <y>110</y>
+      <width>135</width>
+      <height>23</height>
      </rect>
     </property>
     <property name="toolTip">
-     <string>Open file with name class</string>
+     <string>Indicates whether a class for blurring was found</string>
     </property>
     <property name="text">
-     <string>Open Names file</string>
+     <string>Class blur found</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="rbDeleteClassBlur">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>140</y>
+      <width>101</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Remove the blurring class in time of blurring</string>
+    </property>
+    <property name="text">
+     <string>Delete blur</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>50</y>
-      <width>160</width>
+      <y>70</y>
+      <width>221</width>
       <height>31</height>
      </rect>
     </property>
@@ -93,42 +154,13 @@
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="btnBlur">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>130</y>
-      <width>600</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>BLURIIING</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="rbDeleteClassBlur">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>10</y>
-      <width>131</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Delete class blur</string>
-    </property>
-    <property name="checked">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>50</y>
-      <width>401</width>
-      <height>31</height>
+      <x>330</x>
+      <y>60</y>
+      <width>419</width>
+      <height>47</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -156,9 +188,22 @@
       </widget>
      </item>
      <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QComboBox" name="comboBoxNameClassForBlure">
        <property name="editable">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="currentText">
         <string/>
@@ -167,35 +212,13 @@
      </item>
     </layout>
    </widget>
-   <widget class="QCheckBox" name="cbClassBlurFound">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>10</y>
-      <width>151</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Indicates whether a class for blurring was found</string>
-    </property>
-    <property name="text">
-     <string>Class blur found</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>600</width>
+     <width>775</width>
      <height>22</height>
     </rect>
    </property>

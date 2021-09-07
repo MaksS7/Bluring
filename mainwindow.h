@@ -21,11 +21,14 @@ public:
 
 signals:
     void classBlurFound(bool state);
+    void updateDirInfo();
+    void updateFileInfo();
 
 private slots:
     bool openDir();
     bool openFile();
     bool bluringImage();
+    int deleteClassBlurAndCoordinates();
 
 private:
     Ui::MainWindow *ui;
@@ -36,5 +39,11 @@ private:
     QFileInfoList listImage;
     bool deleteClassBlur;
     QString nameClassBlurInFile;
+    QString pathToFileNameClass;
+    QStringList listAllCoordinates;
+
+    bool alreadyDeletedClassName;
+    bool alreadyDeletedCoordinates;
+
 };
 #endif // MAINWINDOW_H
