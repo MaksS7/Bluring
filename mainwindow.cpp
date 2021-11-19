@@ -1,15 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QTextStream>
-#include <opencv4/opencv2/opencv.hpp>
-#include <QDebug>
-#include <QRegularExpression>
-#include <QProgressDialog>
-#include <QMessageBox>
-#include <QDesktopServices>
 
-//TODO: переделать сигнал удаления данных из файлов
-// Вынести из функции удаление данных из файлов в одную отдельную функцию
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -18,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent)
     , nameClassBlurInFile("blure")
     , alreadyDeletedClassName(false)
     , alreadyDeletedCoordinates(false)
+    , blureGain(10.0)
 {
     ui->setupUi(this);
     ui->leNameClassForBlure->setText(nameClassBlurInFile);
@@ -32,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->leNameClassForBlure, &QLineEdit::textEdited,
             this, &MainWindow::setNameBlurInFile);
     connect(ui->btnDeleteAllBlure, &QPushButton::clicked, this, &MainWindow::deleteClassBlurAndCoordinates);
-    //TODO: доделать выбор
+
     auto frameIdTextChanged = [this](const QString &text) {
         if (!text.isEmpty() && text != getNameBlurInFile()) {
             setNameBlurInFile(text);
@@ -46,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(this, &MainWindow::classBlurFound,
             ui->cbClassBlurFound, &QCheckBox::setChecked);
+    connect(ui->btnTest, &QPushButton::clicked, this, &MainWindow::startWorkInAThread);
+
+    connect(ui->dSpinBoxGainBluring, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::setGainBlure);
+
 }
 
 MainWindow::~MainWindow()
@@ -93,7 +89,7 @@ bool MainWindow::openDir()
     return true;
 }
 
-bool MainWindow::openFile() //TODO: переделать с возможностью выбора из combobox
+bool MainWindow::openFile()
 {
     alreadyDeletedClassName = false;
     ui->cbClassBlurFound->setChecked(false);
@@ -147,7 +143,7 @@ bool MainWindow::bluringImage()
 
         progressDialog.show();
         int loopIndex = 0;
-
+        QString fileWithTxtInfoName;
         for (const QFileInfo &imagePath : qAsConst(listImage)) {
             progressDialog.setValue(++loopIndex);
             progressDialog.setLabelText(tr("Bluring number %1 of %n...", nullptr, listImage.size()).arg(loopIndex));
@@ -158,7 +154,8 @@ bool MainWindow::bluringImage()
             }
 
             cv::Mat tempImage = cv::imread(imagePath.filePath().toStdString());
-            fileTxt.setFileName(imagePath.path() + "/" + imagePath.baseName() + ".txt");
+            fileWithTxtInfoName = (imagePath.path() + "/" + imagePath.baseName() + ".txt");
+            fileTxt.setFileName(fileWithTxtInfoName);
 
             if (!fileTxt.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 QMessageBox::warning(this, tr("File error"), tr("The file with the coordinates cannot be opened"));
@@ -173,11 +170,6 @@ bool MainWindow::bluringImage()
 
             fileTxt.close();
 
-            if (deleteClassBlur) {
-                int stDeleted = deleteClassBlurAndCoordinates();
-            }
-
-
             for (const QString &box : qAsConst(listCoordinates)) { //TODO: перенос в отдельную функцию для потока
                  QStringList coordinates = box.split(" ");
                  coordinates.removeAt(0);
@@ -187,10 +179,24 @@ bool MainWindow::bluringImage()
                  float const x = (coordinates[0].toFloat() * tempImage.cols) - width / 2.f;
                  float const y = (coordinates[1].toFloat() * tempImage.rows) - height / 2.f;
 
-                 cv::GaussianBlur(tempImage(cv::Rect(x, y, width, height)), tempImage(cv::Rect(x, y, width, height)), cv::Size(0,0), 10); //TODO: добавить параметр силы замыливания
+                 //TODO: Добавить выбор типа замыливания
+                 cv::GaussianBlur(tempImage(cv::Rect(x, y, width, height)),
+                                  tempImage(cv::Rect(x, y, width, height)), cv::Size(0,0), blureGain);
             }
             cv::imwrite(imagePath.filePath().toStdString(), tempImage);
             tempImage.release();
+
+            if (deleteClassBlur) {
+                if (!deleteCoordinatesFromFile(fileWithTxtInfoName, tempIndex)) {
+                        QMessageBox::warning(this, tr("File error"), tr("Error in deleting coordinates from a file: %1")
+                                             .arg(fileWithTxtInfoName));
+                }
+            }
+        }
+        //TODO: удаление класса
+        if (deleteClassBlur) {
+            alreadyDeletedCoordinates = true;
+            int stDeleted = deleteClassBlurAndCoordinates();
         }
 
         progressDialog.close();
@@ -227,22 +233,11 @@ int MainWindow::deleteClassBlurAndCoordinates()
     }
 
     if (!listAllCoordinates.empty() && !alreadyDeletedCoordinates) {
-        QFile fileTxt;
         for (const QFileInfo &imagePath : qAsConst(listImage)) {
-            fileTxt.setFileName(imagePath.path() + "/" + imagePath.baseName() + ".txt");
-
-            if (!fileTxt.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-                QMessageBox::warning(this, tr("File delete error"), tr("The file with the coordinates cannot be opened"));
-                return -1;
+            if (!deleteCoordinatesFromFile(imagePath.path() + "/" + imagePath.baseName() + ".txt", tempIndex)) {
+                QMessageBox::warning(this, tr("File error"), tr("Error in deleting coordinates from a file: %1")
+                                     .arg(imagePath.path() + "/" + imagePath.baseName() + ".txt", tempIndex));
             }
-            QTextStream stream(&fileTxt);
-            for (const QString &str : qAsConst(listAllCoordinates)) {
-                QStringList tempStrList = str.split(" ");
-                if (tempStrList[0].toInt() != tempIndex && (tempStrList.size() > 1)){
-                    stream << str + "\n";
-                }
-            }
-            fileTxt.close();
         }
         alreadyDeletedCoordinates = true;
         st++;
@@ -250,3 +245,39 @@ int MainWindow::deleteClassBlurAndCoordinates()
     return st;
 }
 
+
+
+void MainWindow::startWorkInAThread()
+{
+    static int toThread = 0;
+    WorkerThread *workerThread = new WorkerThread(this, toThread++);
+//    connect(workerThread, &WorkerThread::resultReady, this, &Main::handleResults);
+    connect(workerThread, &WorkerThread::finished, workerThread, &QObject::deleteLater);
+    workerThread->start();
+}
+
+bool MainWindow::deleteCoordinatesFromFile(const QString &name, const int &index)
+{
+    if (name.isEmpty() || index < 0)
+        return false;
+
+    QFile fileTxt(name);
+    if (!fileTxt.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        QMessageBox::warning(this, tr("File delete error"), tr("The file with the coordinates cannot be opened"));
+        return false;
+    }
+    QTextStream stream(&fileTxt);
+    for (const QString &str : qAsConst(listAllCoordinates)) {
+        QStringList tempStrList = str.split(" ");
+        if (tempStrList[0].toInt() != index && (tempStrList.size() > 1)){
+            stream << str + "\n";
+        }
+    }
+    fileTxt.close();
+    return true;
+}
+
+WorkerThread::WorkerThread(QObject *parent, const int &number): QThread(parent)
+  ,num(number){
+
+}
